@@ -1,0 +1,557 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseCheck | Service Monitor</title>
+
+    <style>
+        :root {
+            --background: #f5f8fc;
+            --surface: #ffffff;
+            --primary: #2563eb;
+            --text: #172033;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --green: #15803d;
+            --green-bg: #dcfce7;
+            --red: #b91c1c;
+            --red-bg: #fee2e2;
+            --amber: #b45309;
+            --amber-bg: #fef3c7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         sans-serif;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 6%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: white;
+            background: var(--primary);
+            font-size: 23px;
+            font-weight: 800;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .refresh-label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        main {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .welcome {
+            margin-bottom: 24px;
+        }
+
+        .welcome h2 {
+            font-size: 25px;
+            margin: 0 0 8px;
+        }
+
+        .welcome p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .summary-card,
+        .service-card,
+        .activity-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.035);
+        }
+
+        .card-label {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .summary-value {
+            font-size: 30px;
+            font-weight: 750;
+        }
+
+        .summary-note {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 30px 0 16px;
+        }
+
+        .section-heading h3 {
+            font-size: 19px;
+            margin: 0;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .service-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .service-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .service-description {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .healthy {
+            background: var(--green-bg);
+            color: var(--green);
+        }
+
+        .unhealthy {
+            background: var(--red-bg);
+            color: var(--red);
+        }
+
+        .unknown {
+            background: var(--amber-bg);
+            color: var(--amber);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .service-details {
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 650;
+            overflow-wrap: anywhere;
+        }
+
+        .activity-card {
+            margin-top: 18px;
+        }
+
+        .activity-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .activity-row:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: #eff6ff;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .activity-time {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .notice {
+            border-radius: 12px;
+            padding: 14px 16px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 22px;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            padding: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .service-grid {
+                grid-template-columns: 1fr;
+            }
+
+            main {
+                padding: 24px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="brand">
+            <div class="logo">P</div>
+            <div>
+                <h1>PulseCheck</h1>
+                <div class="subtitle">Distributed Service Health Monitor</div>
+            </div>
+        </div>
+
+        <div class="refresh-label">
+            Auto-refresh: every 5 seconds
+        </div>
+    </header>
+
+    <main>
+        <section class="welcome">
+            <h2>System Overview</h2>
+            <p>
+                Monitor backend health, inspect service availability,
+                and observe the status of your distributed application.
+            </p>
+        </section>
+
+        <section class="summary-grid">
+            <div class="summary-card">
+                <div class="card-label">Overall System Status</div>
+                <div class="summary-value" id="system-status">Loading</div>
+                <div class="summary-note">Based on backend health checks</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="card-label">Healthy Services</div>
+                <div class="summary-value" id="healthy-count">—</div>
+                <div class="summary-note">Services responding successfully</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="card-label">Total Services</div>
+                <div class="summary-value" id="total-count">2</div>
+                <div class="summary-note">Registered backend services</div>
+            </div>
+        </section>
+
+        <div class="section-heading">
+            <h3>Backend Services</h3>
+            <span class="subtitle" id="last-updated">Waiting for data…</span>
+        </div>
+
+        <section class="service-grid">
+            <article class="service-card">
+                <div class="service-top">
+                    <div>
+                        <div class="service-name">Service A</div>
+                        <div class="service-description">Primary backend instance</div>
+                    </div>
+                    <span id="badge-a" class="status-pill unknown">
+                        <span class="status-dot"></span>Checking
+                    </span>
+                </div>
+
+                <div class="service-details">
+                    <div>
+                        <div class="detail-label">Hostname</div>
+                        <div class="detail-value" id="host-a">—</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">Uptime</div>
+                        <div class="detail-value" id="uptime-a">—</div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="service-card">
+                <div class="service-top">
+                    <div>
+                        <div class="service-name">Service B</div>
+                        <div class="service-description">Secondary backend instance</div>
+                    </div>
+                    <span id="badge-b" class="status-pill unknown">
+                        <span class="status-dot"></span>Checking
+                    </span>
+                </div>
+
+                <div class="service-details">
+                    <div>
+                        <div class="detail-label">Hostname</div>
+                        <div class="detail-value" id="host-b">—</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">Uptime</div>
+                        <div class="detail-value" id="uptime-b">—</div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <div class="section-heading">
+            <h3>Monitoring Activity</h3>
+        </div>
+
+        <section class="activity-card" id="activity">
+            <div class="activity-row">
+                <div class="activity-icon">i</div>
+                <div>
+                    Dashboard initialized
+                    <span class="activity-time">Waiting for the first health check</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="notice">
+            <strong>How to demonstrate failover:</strong>
+            stop Service A from the terminal, then observe its status change
+            and send requests to <code>/route</code>. Requests should be
+            served by Service B while Service A is unavailable.
+        </div>
+    </main>
+
+    <footer>
+        PulseCheck · Distributed Systems Mini Project
+    </footer>
+
+    <script>
+        const previousStatuses = {};
+        const activityElement = document.getElementById("activity");
+
+        function formatUptime(seconds) {
+            if (seconds === null || seconds === undefined) {
+                return "Unavailable";
+            }
+
+            const total = Math.floor(seconds);
+            const hours = Math.floor(total / 3600);
+            const minutes = Math.floor((total % 3600) / 60);
+            const secs = total % 60;
+
+            if (hours > 0) {
+                return `${hours}h ${minutes}m ${secs}s`;
+            }
+
+            if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            }
+
+            return `${secs}s`;
+        }
+
+        function addActivity(message) {
+            const row = document.createElement("div");
+            row.className = "activity-row";
+
+            const icon = document.createElement("div");
+            icon.className = "activity-icon";
+            icon.textContent = "•";
+
+            const content = document.createElement("div");
+            content.appendChild(document.createTextNode(message));
+
+            const time = document.createElement("span");
+            time.className = "activity-time";
+            time.textContent = new Date().toLocaleTimeString();
+
+            content.appendChild(time);
+            row.appendChild(icon);
+            row.appendChild(content);
+
+            activityElement.prepend(row);
+
+            while (activityElement.children.length > 6) {
+                activityElement.lastElementChild.remove();
+            }
+        }
+
+        function updateBadge(id, status) {
+            const badge = document.getElementById(id);
+            badge.className = "status-pill";
+
+            if (status === "healthy") {
+                badge.classList.add("healthy");
+                badge.innerHTML = '<span class="status-dot"></span>Healthy';
+            } else if (
+                status === "unavailable" ||
+                status === "unhealthy"
+            ) {
+                badge.classList.add("unhealthy");
+                badge.innerHTML = '<span class="status-dot"></span>' +
+                    (status === "unavailable" ? "Unavailable" : "Unhealthy");
+            } else {
+                badge.classList.add("unknown");
+                badge.innerHTML = '<span class="status-dot"></span>Unknown';
+            }
+        }
+
+        async function refreshDashboard() {
+            try {
+                const response = await fetch("/status", {
+                    cache: "no-store"
+                });
+
+                if (!response.ok) {
+                    throw new Error("Health endpoint returned an error");
+                }
+
+                const data = await response.json();
+
+                document.getElementById("system-status").textContent =
+                    data.system_status.toUpperCase();
+
+                document.getElementById("healthy-count").textContent =
+                    data.healthy_services;
+
+                document.getElementById("total-count").textContent =
+                    data.total_services;
+
+                for (const service of data.services) {
+                    const suffix = service.service === "service-a" ? "a" : "b";
+
+                    updateBadge(`badge-${suffix}`, service.status);
+
+                    document.getElementById(`host-${suffix}`).textContent =
+                        service.hostname || "Unavailable";
+
+                    document.getElementById(`uptime-${suffix}`).textContent =
+                        formatUptime(service.uptime_seconds);
+
+                    const previous = previousStatuses[service.service];
+
+                    if (previous && previous !== service.status) {
+                        addActivity(
+                            `${service.service} changed from ${previous} to ${service.status}`
+                        );
+                    } else if (!previous) {
+                        addActivity(
+                            `${service.service} detected as ${service.status}`
+                        );
+                    }
+
+                    previousStatuses[service.service] = service.status;
+                }
+
+                document.getElementById("last-updated").textContent =
+                    "Updated " + new Date().toLocaleTimeString();
+
+            } catch (error) {
+                document.getElementById("system-status").textContent =
+                    "NO CONNECTION";
+
+                document.getElementById("last-updated").textContent =
+                    "Monitor unavailable";
+
+                addActivity("Unable to reach the monitor health endpoint");
+            }
+        }
+
+        refreshDashboard();
+        setInterval(refreshDashboard, 5000);
+    </script>
+</body>
+</html>

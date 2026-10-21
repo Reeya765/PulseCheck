@@ -1,0 +1,24 @@
+services:
+  service_a:
+    build: ./service_a
+    environment:
+      SERVICE_NAME: service-a
+    restart: unless-stopped
+
+  service_b:
+    build: ./service_b
+    environment:
+      SERVICE_NAME: service-b
+    restart: unless-stopped
+
+  monitor:
+    build: ./monitor
+    ports:
+      - "8000:8000"
+    environment:
+      SERVICE_A_URL: http://service_a:5000
+      SERVICE_B_URL: http://service_b:5000
+    depends_on:
+      - service_a
+      - service_b
+    restart: unless-stopped
